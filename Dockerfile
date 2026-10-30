@@ -13,7 +13,7 @@ FROM node:24-bookworm-slim AS t3code
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       git openssh-client ca-certificates curl ripgrep python3 make g++ \
-      sudo iptables \
+      sudo iptables openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Versions come from .env via docker-compose.yml ("latest" or a pinned version).
@@ -35,8 +35,14 @@ RUN echo 'node ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/node \
     && chmod 0440 /etc/sudoers.d/node \
     && mkdir -p /workspace && chown node:node /workspace
 
+# SSH access: entrypoint.sh starts sshd as "node" (port 2222)
+COPY --chmod=644 sshd_config /etc/ssh/t3_sshd_config
+COPY --chmod=644 sshd.pam /etc/pam.d/sshd
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
+
 USER node
 WORKDIR /workspace
-EXPOSE 3773
+EXPOSE 3773 2222
 
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["t3", "serve", "--host", "0.0.0.0"]

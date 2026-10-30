@@ -1,0 +1,30 @@
+# sshd for remote access (VS Code Remote-SSH, T3 Code over SSH).
+# Runs as the "node" user, so only "node" can log in.
+
+# Written by entrypoint.sh: password login (if SSH_PASSWORD is set) and the
+# container environment. First, so it wins over the defaults below.
+Include /tmp/sshd_extra.conf
+
+Port 2222
+ListenAddress 0.0.0.0
+HostKey /home/node/.ssh/ssh_host_ed25519_key
+PidFile /tmp/sshd.pid
+AuthorizedKeysFile .ssh/authorized_keys
+# home/ is a bind mount whose modes come from the host (often 775)
+StrictModes no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+MaxAuthTries 3
+LoginGraceTime 20
+# PAM checks the password (non-root sshd can only verify its own user's)
+UsePAM yes
+AllowUsers node
+# -L and -D only (what VS Code and T3 need); the firewall still applies to them
+AllowTcpForwarding local
+AllowStreamLocalForwarding local
+# Agents must not get to use your SSH keys
+AllowAgentForwarding no
+PermitUserRC no
+X11Forwarding no
+PrintMotd no
+Subsystem sftp /usr/lib/openssh/sftp-server

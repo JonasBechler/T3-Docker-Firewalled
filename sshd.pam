@@ -1,0 +1,5 @@
+# PAM for the non-root sshd: just the password check, nothing that needs root
+auth     required pam_unix.so
+account  required pam_unix.so
+session  required pam_permit.so
+password required pam_deny.so

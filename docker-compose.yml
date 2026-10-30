@@ -6,7 +6,6 @@ services:
       context: .
       target: firewall
     image: t3code-firewall:local
-    container_name: t3code-firewall
     restart: unless-stopped
     init: true
     user: "0:0"
@@ -25,7 +24,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"   # lets firewall.sh find the host for Ollama
     ports:
-      - "127.0.0.1:3773:3773"             # T3 Code, this machine only
+      - "127.0.0.1:${T3_PORT:-3773}:3773"   # T3 Code, this machine only
+      - "${SSH_BIND:-127.0.0.1}:${SSH_PORT:-2222}:2222"   # SSH (see .env.example)
     healthcheck:
       test: ["CMD", "test", "-f", "/run/firewall-ready"]
       interval: 5s
@@ -42,10 +42,9 @@ services:
         CLAUDE_CODE_VERSION: ${CLAUDE_CODE_VERSION:-latest}
         CLI_CACHE_BUST: ${CLI_CACHE_BUST:-0}
     image: t3code:local
-    container_name: t3code
     restart: unless-stopped
     init: true
-    # Command comes from the Dockerfile CMD.
+    # Command comes from the Dockerfile (entrypoint.sh starts sshd, then T3 Code).
 
     # Shares the firewall container's network; starts only once rules are in place.
     network_mode: "service:firewall"
@@ -71,6 +70,7 @@ services:
       T3CODE_NO_BROWSER: "1"
       DISABLE_AUTOUPDATER: "1"      # CLIs are installed system-wide; update by rebuilding
       OLLAMA_HOST: "http://host.docker.internal:11434"   # Ollama running on the host
+      SSH_PASSWORD: ${SSH_PASSWORD:-}   # optional SSH password login; empty = keys only
       # Optional: API keys instead of interactive provider logins
       # ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       # OPENAI_API_KEY: ${OPENAI_API_KEY}

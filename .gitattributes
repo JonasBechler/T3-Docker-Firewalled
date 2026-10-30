@@ -1,2 +1,2 @@
-# Shell scripts must keep LF endings or they fail inside the Linux containers
-*.sh text eol=lf
+# Everything in LF: the scripts and config files are read inside Linux containers
+* text=auto eol=lf
