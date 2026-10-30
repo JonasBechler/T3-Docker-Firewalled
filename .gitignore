@@ -1,0 +1,5 @@
+# Runtime data and secrets: never commit
+home/
+workspace/
+.env
+.DS_Store
